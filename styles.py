@@ -1,6 +1,6 @@
 APP_STYLE = """
 * {
-    font-family: "Roboto";
+    font-family: "Arial";
 }
 
 QMainWindow {

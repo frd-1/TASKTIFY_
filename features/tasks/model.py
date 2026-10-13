@@ -6,6 +6,7 @@ class Task:
     """Represents a Task entity."""
 
     id: int
+    user_id: int
     title: str
     description: str
     category: str
@@ -17,6 +18,7 @@ class Task:
     def from_row(cls, row):
         return cls(
             id=row["id"],
+            user_id=row["user_id"],
             title=row["title"],
             description=row["description"] or "",
             category=row["category"],

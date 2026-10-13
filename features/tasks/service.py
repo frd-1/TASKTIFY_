@@ -8,28 +8,28 @@ class TaskService:
     def __init__(self, repository: TaskRepository):
         self.repository = repository
 
-    def create_task(self, title, description, category, priority, due_date, status="Pending"):
+    def create_task(self, user_id, title, description, category, priority, due_date, status="Pending"):
         title = title.strip()
         description = description.strip()
 
         self.validate_task(title, category, priority, due_date, status)
-        return self.repository.add(title, description, category, priority, due_date, status)
+        return self.repository.add(user_id, title, description, category, priority, due_date, status)
 
-    def get_all_tasks(self):
-        return self.repository.get_all()
+    def get_all_tasks(self, user_id):
+        return self.repository.get_all(user_id)
 
-    def get_task(self, task_id):
-        return self.repository.get_by_id(task_id)
+    def get_task(self, task_id, user_id):
+        return self.repository.get_by_id(task_id, user_id)
 
-    def update_task(self, task_id, title, description, category, priority, due_date, status):
+    def update_task(self, task_id, user_id, title, description, category, priority, due_date, status):
         title = title.strip()
         description = description.strip()
 
         self.validate_task(title, category, priority, due_date, status)
-        return self.repository.update(task_id, title, description, category, priority, due_date, status)
+        return self.repository.update(task_id, user_id, title, description, category, priority, due_date, status)
 
-    def delete_task(self, task_id):
-        return self.repository.delete(task_id)
+    def delete_task(self, task_id, user_id):
+        return self.repository.delete(task_id, user_id)
 
     @staticmethod
     def validate_task(title, category, priority, due_date, status):
@@ -69,8 +69,8 @@ class TaskService:
 
         return "Upcoming"
 
-    def get_statistics(self):
-        tasks = self.get_all_tasks()
+    def get_statistics(self, user_id):
+        tasks = self.get_all_tasks(user_id)
         return {
             "total": len(tasks),
             "pending": sum(t.status == "Pending" for t in tasks),

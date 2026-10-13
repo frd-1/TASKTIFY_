@@ -16,12 +16,13 @@ TASKTIFY was developed using modular programming and Object-Oriented Programming
 
 The main objectives of TASKTIFY are:
 
-- To provide a simple task management system.
+- To provide a simple task management system with user registration and login.
 - To allow users to create, view, update, and delete tasks.
 - To organize tasks using categories and priorities.
 - To monitor task status and due dates.
 - To provide search and filtering functions.
-- To store task information using an SQLite database.
+- To store user accounts and task information using an SQLite database.
+- To keep each user's task list separate.
 - To apply modular programming in organizing the project.
 - To apply Object-Oriented Programming concepts.
 - To provide a dashboard for monitoring tasks.
@@ -35,15 +36,97 @@ The main objectives of TASKTIFY are:
 
 | # | Feature | Description | Functions / Details |
 |---|---|---|---|
-| 1 | **Dashboard** | Provides an overview of the user's tasks. | Total Tasks, Pending Tasks, Completed Tasks, Overdue Tasks, Due Soon Tasks, Upcoming Tasks, and access to the Easter Egg |
-| 2 | **Task Management** | Allows users to manage their task records through the My Tasks page. | Add, view, edit, delete, search, and filter tasks |
-| 3 | **Add Task** | Allows users to create a new task and save it to the database. | Task Title, Description, Category, Priority, Due Date, and Status |
-| 4 | **Edit Task** | Allows users to modify an existing task. | Edit Title, Description, Category, Priority, Due Date, and Status |
-| 5 | **Delete Task** | Allows users to remove an existing task from the database. | Delete task with confirmation dialog |
-| 6 | **Search and Filtering** | Helps users find and organize tasks. | Search by Title, Description, or Category; filter by Category, Priority, or Status |
-| 7 | **Task Status** | Allows users to track the current status of a task. | Pending and Completed |
-| 8 | **Due Date Tracking** | Automatically determines the state of a task based on its due date and status. | Upcoming, Due Soon, Overdue, and Completed. A task is Due Soon when its due date is within two days |
-| 9 | **Easter Egg** | Provides an interactive egg that reveals a randomly selected Bible verse. | Animated egg, random Bible verse selection, and verse display dialog |
+| 1 | **User Authentication** | Allows users to create an account and access TASKTIFY by logging in. | Register, log in, password hashing, and sign out |
+| 2 | **Dashboard** | Provides an overview of the currently logged-in user's tasks. | Total Tasks, Pending Tasks, Completed Tasks, Overdue Tasks, Due Soon Tasks, Upcoming Tasks, and access to the Easter Egg |
+| 3 | **Task Management** | Allows users to manage their task records through the My Tasks page. | Add, view, edit, delete, search, and filter tasks |
+| 4 | **Add Task** | Allows users to create a new task and save it to the database. | Task Title, Description, Category, Priority, Due Date, and Status |
+| 5 | **Edit Task** | Allows users to modify an existing task. | Update the title, description, category, priority, due date, or status |
+| 6 | **Delete Task** | Allows users to remove an existing task from the database. | Delete task with a confirmation dialog |
+| 7 | **Search and Filtering** | Helps users find and organize tasks. | Search by title, description, or category; filter by category, priority, or status |
+| 8 | **Clear Filters** | Resets the search and filter controls. | Clears the search field and returns the category, priority, and status filters to their default selections |
+| 9 | **Task Status** | Allows users to track the current status of a task. | Pending and Completed |
+| 10 | **Due-Date Tracking** | Determines a task's due state based on its due date and status. | Upcoming, Due Soon, Overdue, and Completed; Due Soon is used for tasks whose due dates fall within two days |
+| 11 | **Quick Links** | Provides a shortcut to task creation from the sidebar. | Add Task shortcut |
+| 12 | **Easter Egg** | Provides an interactive egg that reveals a randomly selected Bible verse. | Egg interaction, random verse selection, and verse display dialog |
+
+---
+
+### DETAILED DESCRIPTIONS OF MAJOR FEATURES AND OPERATIONS
+
+---
+
+1. #### USER AUTHENTICATION
+
+| Operation | Description |
+|---|---|
+| **Register** | Allows a new user to create an account by entering a username and password. The system checks the submitted information and prevents registration with a username that is already in use. |
+| **Login** | Checks the entered username and password against the registered account. If the credentials are valid, the user can access the main TASKTIFY window. |
+| **Password Hashing** | Converts the password into a hash before storing it in the database. The current implementation uses Python's `hashlib` SHA-256 function. |
+| **User-Specific Task Access** | Associates tasks with the logged-in user's ID so that each account can access its own task records. |
+| **Sign Out** | Ends the current session in the application and returns the user to the authentication screen. |
+
+2. #### DASHBOARD
+
+The Dashboard summarizes the logged-in user's task information.
+
+| Operation / Statistic | Description |
+|---|---|
+| **Total Tasks** | Displays the total number of tasks belonging to the logged-in user, including pending and completed tasks. |
+| **Pending Tasks** | Displays the number of tasks that have not yet been marked as completed. |
+| **Completed Tasks** | Displays the number of tasks marked as completed. |
+| **Overdue Tasks** | Displays pending tasks whose due dates have already passed. |
+| **Due Soon Tasks** | Displays pending tasks with due dates within the next two days, according to the application's due-date rules. |
+| **Upcoming Tasks** | Shows task information related to approaching or scheduled due dates so the user can monitor what needs attention. |
+| **Greeting** | Displays a greeting for the currently logged-in user. |
+| **Easter Egg Access** | Lets the user interact with the Easter Egg feature to reveal a Bible verse. |
+
+3. #### TASK MANAGEMENT
+
+| Operation | Description |
+|---|---|
+| **Add Task** | Opens the task form so the user can enter a title, description, category, priority, due date, and status. After validation, the task is saved to the database. |
+| **View Tasks** | Displays the logged-in user's saved tasks in the My Tasks table. |
+| **Edit Task** | Opens the selected task's information so the user can make changes and save the updated record. |
+| **Delete Task** | Asks the user to confirm the deletion before removing the selected task from the database. |
+| **Task Validation** | Checks the task information before saving it, helping prevent incomplete or invalid task entries. |
+| **Task Categories** | Groups tasks into School, Project, Personal, or Other. |
+| **Task Priorities** | Lets the user assign Low, Medium, or High priority to a task. |
+| **Task Status** | Lets the user mark a task as Pending or Completed. |
+
+4. #### SEARCH AND FILTERING
+
+| Operation | Description |
+|---|---|
+| **Search** | Searches task information using the title, description, or category entered by the user. |
+| **Category Filter** | Shows tasks that match the selected category. |
+| **Priority Filter** | Shows tasks that match the selected priority. |
+| **Status Filter** | Shows tasks that match the selected status. |
+| **Combined Filters** | Allows the search and selected filters to be used together to narrow the displayed task list. |
+| **Clear** | Clears the search text and resets the category, priority, and status filters to their default selections. |
+
+5. #### DUE-DATE TRACKING
+
+| Due State | Description |
+|---|---|
+| **Upcoming** | Indicates a task that is not yet due soon or overdue, based on the application's due-date rules. |
+| **Due Soon** | Indicates a pending task whose due date is within the next two days. |
+| **Overdue** | Indicates a pending task whose due date has passed. |
+| **Completed** | Indicates that the task has been marked as completed. |
+
+6. #### QUICK LINKS
+
+| Operation | Description |
+|---|---|
+| **Add Task Shortcut** | Opens the Add Task page from the Quick Links section in the sidebar, giving the user a direct way to create a task. |
+
+7. #### EASTER EGG
+
+| Operation | Description |
+|---|---|
+| **Egg Interaction** | Allows the user to interact with the Easter Egg on the dashboard. |
+| **Random Verse Selection** | Selects a Bible verse from the predefined collection. |
+| **Verse Display** | Shows the selected Bible verse in a dialog window. |
+
 
 ---
 
@@ -56,7 +139,7 @@ The main objectives of TASKTIFY are:
 | Programming Language | Python |
 | GUI Framework | PyQt6 |
 | Database | SQLite, Python `sqlite3` module |
-| Python Libraries and Modules | `sqlite3`, `pathlib`, `dataclasses`, `random`, `datetime`, `sys` |
+| Python Libraries and Modules | `sqlite3`, `pathlib`, `dataclasses`, `random`, `datetime`, `sys`, `hashlib` |
 | PyQt6 Modules | `PyQt6.QtWidgets`, `PyQt6.QtCore`, `PyQt6.QtGui` |
 | Development Tools | PyCharm, Git, GitHub |
 
@@ -66,54 +149,61 @@ The main objectives of TASKTIFY are:
 
 ---
 
-
 ```text
 TASKTIFY_/
-├── main.py                         # Entry point; initializes the application and main window
+├── main.py                         # Entry point; initializes authentication and the application
 ├── main_window.py                  # Main window, dashboard, task management, and feature integration
 ├── styles.py                       # Custom PyQt6 styles for the TASKTIFY interface
-│── tasktify.db                     # Local SQLite database that stores task records
-|
+├── tasktify.db                     # Local SQLite database for user accounts and task records
+│
 ├── database/
-│   └── database.py                 # SQLite connection manager and database query handler
-|
+│   └── database.py                 # SQLite connection and database table setup
+│
 └── features/
+    ├── authentication/             # User registration and login
+    │   ├── model.py                # User data structure
+    │   ├── repository.py           # User database operations
+    │   ├── service.py              # Authentication logic and validation
+    │   └── view.py                 # Login and registration interface
+    │
     ├── easter_egg/                 # Easter Egg feature for displaying random Bible verses
-    │   ├── model.py                # Verse dataclass and data structure
-    │   ├── repository.py           # Stores and retrieves the available Bible verses
-    │   ├── service.py              # Easter Egg business logic and verse handling
-    │   └── view.py                 # Easter Egg interface, animations, and verse dialog
+    │   ├── model.py                # Verse data structure
+    │   ├── repository.py           # Stores and retrieves available Bible verses
+    │   ├── service.py              # Verse-related logic
+    │   └── view.py                 # Easter Egg interface and verse dialog
     │
     └── tasks/                      # Task management and CRUD operations
-        ├── model.py                # Task dataclass and task data structure
-        ├── repository.py           # SQL queries for task records
-        ├── service.py              # Task validation, business logic, and due-date processing
+        ├── model.py                # Task data structure
+        ├── repository.py           # SQL operations for task records
+        ├── service.py              # Task validation and business logic
         └── view.py                 # Task entry and editing dialogs
 ```
-
 
 ### Main Components
 
 `main.py`  
-Serves as the entry point of TASKTIFY. It initializes the PyQt6 application, connects the SQLite database, creates the main window, and starts the application event loop.
+Serves as the entry point of TASKTIFY. It initializes the application and database, displays the authentication screen, and opens the main window after a successful login. Signing out returns the user to the authentication screen.
 
 `database/database.py`  
-Handles the SQLite database connection, creates the tasks table, and provides functions for executing queries and retrieving database records.
+Handles the SQLite database connection and creates the users and tasks tables. It also provides functions for executing database queries.
+
+`features/authentication/`  
+Handles user registration and login, including account validation and user record storage.
 
 `features/tasks/`  
-Handles task management, including task data, validation, database operations, CRUD operations, due-date processing, searching, filtering, and the task interface.
+Handles task data, validation, database operations, CRUD operations, due-date processing, searching, filtering, and the task interface. Task records are associated with the logged-in user's ID.
 
 `features/easter_egg/`  
-Handles the Easter Egg feature, including Bible verse data, random verse selection, the animated egg interaction, and the verse display interface.
+Handles the Easter Egg feature, including Bible verse data, random verse selection, the egg interaction, and the verse display interface.
 
 `main_window.py`  
-Contains the main TASKTIFY interface and connects the dashboard, My Tasks page, task operations, search and filtering, task statistics, upcoming tasks, and Easter Egg feature.
+Contains the main TASKTIFY interface and connects the dashboard, My Tasks page, Quick Links, task operations, search and filtering, task statistics, upcoming tasks, and Easter Egg feature.
 
 `styles.py`  
 Contains the custom PyQt6 styles used throughout the TASKTIFY graphical interface, including the main window, buttons, tables, dialogs, and input fields.
 
 `tasktify.db`  
-Contains the local SQLite database used to store the task records created and managed by the user.
+Contains the local SQLite database used to store registered user accounts and task records.
 
 
 ---
@@ -168,7 +258,7 @@ pip install PyQt6
 python main.py
 ```
 
-The application connects to the local SQLite database and uses the tasktify.db file to store task records.
+The application connects to the local SQLite database and uses `tasktify.db` to store user accounts and task records.
 
 ---
 
@@ -177,67 +267,70 @@ The application connects to the local SQLite database and uses the tasktify.db f
 
 ---
 
-### Step 1: Open TASKTIFY
+### STEP 1: OPEN TASKTIFY
 
 Run:
 
 ```bash
 python main.py
 ```
-The TASKTIFY main window will appear.
 
-### Step 2: Dashboard
+The login and registration screen will appear. Register an account if you are a new user, then log in to open the main TASKTIFY window.
 
+### STEP 2: DASHBOARD
 
-The Dashboard displays task statistics and upcoming tasks.
+The Dashboard displays the logged-in user's task statistics, upcoming tasks, greeting, and access to the Easter Egg.
 
+### STEP 3: ADDING A TASK
 
-### Step 3: Adding a Task
+Select **Add Task** or use the Add Task shortcut in **Quick Links**. Enter:
 
-Select **Add Task** and enter:
-
-- Title
-- Description
-- Category
-- Priority
-- Due Date
-- Status
+• Title
+• Description
+• Category
+• Priority
+• Due Date
+• Status
 
 Save the task to store it in the database.
 
-### Step 4: Viewing Tasks
+### STEP 4: VIEWING TASKS
 
-Open **My Tasks** to view the stored task records.
+Open **My Tasks** to view the saved tasks associated with the logged-in account.
 
-### Step 5: Searching Tasks
+### STEP 5: SEARCHING TASKS
 
-Enter a keyword in the search field.
+Enter a keyword in the search field. The system searches through the task's:
 
-The system searches through the task:
+• Title
+• Description
+• Category
 
-- Title
-- Description
-- Category
-
-### Step 6. Filtering Tasks
+### STEP 6: FILTERING TASKS
 
 Use the filters to filter tasks by:
 
-- Category
-- Priority
-- Status
+• Category
+• Priority
+• Status
 
-### Step 7: Editing a Task
+Click **Clear** to remove the search text and reset all filters.
+
+### STEP 7: EDITING A TASK
 
 Select an existing task and use the edit function to modify its information.
 
-### Step 8: Deleting a Task
+### STEP 8: DELETING A TASK
 
-Select an existing task and use the delete function to remove it from the database.
+Select an existing task and confirm the deletion to remove it from the database.
 
-### 9. Easter Egg
+### STEP 9: EASTER EGG
 
-Click the Easter Egg feature from the dashboard to interact with the egg and reveal a randomly selected Bible verse.
+Click or interact with the Easter Egg feature from the dashboard to reveal a randomly selected Bible verse.
+
+### STEP 10: SIGNING OUT
+
+Click **Sign Out** to return to the authentication screen.
 
 ---
 
@@ -249,19 +342,23 @@ TASKTIFY applies Object-Oriented Programming through classes and objects.
 
 ### Important Classes
 
-| Class | Purpose |
-|---|---|
-| `Database` | Handles SQLite database operations |
-| `Task` | Represents a task |
-| `TaskRepository` | Handles task database operations |
-| `TaskService` | Handles task validation and business logic |
-| `TaskDialog` | Provides the task input/edit interface |
-| `Verse` | Represents a Bible verse |
+|  Class            | Purpose |
+|-------------------|---|
+| `Database`        | Handles SQLite database operations |
+| `User`            | Represents a registered user |
+| `AuthRepository`  | Handles user account database operations |
+| `AuthService`     | Handles registration, login, and authentication validation |
+| `AuthDialog`      | Provides the login and registration interface |
+| `Task`            | Represents a task |
+| `TaskRepository`  | Handles task database operations |
+| `TaskService`     | Handles task validation and business logic |
+| `TaskDialog`      | Provides the task input/edit interface |
+| `Verse`           | Represents a Bible verse |
 | `VerseRepository` | Stores and selects Bible verses |
-| `VerseService` | Handles verse-related logic |
-| `VerseDialog` | Displays Bible verses |
-| `EggWidget` | Provides the interactive Easter Egg |
-| `MainWindow` | Provides the main application interface|
+| `VerseService`    | Handles verse-related logic |
+| `VerseDialog`     | Displays Bible verses |
+| `EggWidget`       | Provides the interactive Easter Egg |
+| `MainWindow`      | Provides the main application interface |
 
 ### Encapsulation
 
@@ -315,7 +412,7 @@ service.py
 view.py
 ```
 
-The Easter Egg feature follows the same structure.
+The authentication and Easter Egg features also use separate modules for their data, operations, and interface.
 
 | Module | Responsibility |
 |---|---|
@@ -343,13 +440,25 @@ tasktify.db
 
 The database is managed through the `Database` class in `database/database.py`.
 
-### Tasks Table
+### Users Table
 
-The system creates a `tasks` table containing the following fields:
+The `users` table stores registered user information.
+
+| Field | Data Type | Description |
+|---|---|---|
+| `id` | INTEGER | Primary key and unique user identifier |
+| `username` | TEXT | Unique username used to log in |
+| `password_hash` | TEXT | Hashed password value |
+
+
+### TASKS TABLE
+
+The `tasks` table stores task information associated with a user.
 
 | Field | Data Type | Description |
 |---|---|---|
 | `id` | INTEGER | Primary key and unique task identifier |
+| `user_id` | INTEGER | Identifies the user who owns the task |
 | `title` | TEXT | Task title |
 | `description` | TEXT | Task description |
 | `category` | TEXT | Task category |
@@ -363,20 +472,20 @@ The system creates a `tasks` table containing the following fields:
 
 ---
 
-TASKTIFY implements the four basic CRUD (Create, Read, Update, Delete) operations to manage task records stored in the SQLite database. These operations are handled primarily by the `TaskRepository` class, which communicates with the `Database` class to execute the required SQL operations.
+TASKTIFY implements the four basic CRUD (Create, Read, Update, Delete) operations to manage task records stored in SQLite. These operations are handled primarily by `TaskRepository`, which communicates with the database to execute the required SQL operations. Task records are associated with the logged-in user's ID.
 
 | Operation | TASKTIFY Function | Specific Implementation |
 |---|---|---|
-| **Create** | Add a new task | The user enters the task title, description, category, priority, due date, and status through the `TaskDialog`. The task information is validated and passed to `TaskRepository`, which inserts the new record into the SQLite `tasks` table. |
-| **Read** | View and retrieve tasks | `TaskRepository` retrieves task records from the SQLite database. The retrieved tasks are converted into `Task` objects and displayed in the My Tasks page and Dashboard. |
-| **Update** | Edit an existing task | The user selects an existing task and modifies its information through the `TaskDialog`. The updated values are validated and passed to `TaskRepository`, which updates the corresponding database record using its task ID. |
-| **Delete** | Remove a task | The user selects a task to delete and confirms the deletion through the confirmation dialog. `TaskRepository` then removes the selected task record from the SQLite database using its task ID. |
+| **Create** | Add a new task | The user enters task details through `TaskDialog`. The information is validated and passed to `TaskRepository`, which inserts the new record into the database. |
+| **Read** | View and retrieve tasks | `TaskRepository` retrieves task records from the database. The task objects are displayed in the My Tasks page and Dashboard. |
+| **Update** | Edit an existing task | The user modifies task information through `TaskDialog`. The updated values are validated and used to update the corresponding task record. |
+| **Delete** | Remove a task | The user confirms deletion, and `TaskRepository` removes the selected task record from the database. |
 
 ---
 
 ## Search and Filtering
 
-TASKTIFY provides search and filtering functionality.
+TASKTIFY provides search and filtering functionality to help users locate specific tasks.
 
 ### Search
 
@@ -394,47 +503,63 @@ Users can filter tasks by:
 - Priority
 - Status
 
+The **Clear** button resets the search field and all filters to their default selections.
+
 ---
 
 ## Screenshots
 
 ---
 
+The following screenshots demonstrate the main features and functions of the TASKTIFY system.
+
+### User Authentication
+![User Authentication](screenshots/authentication.png)
+
+Shows the login and registration interface where users can enter their username and password to access TASKTIFY or create a new account. This demonstrates the system's user authentication feature.
+
 ### Dashboard
 
 ![Dashboard](screenshots/dashboard.png)
 
-Shows the TASKTIFY dashboard containing task statistics, upcoming tasks, and access to the Easter Egg.
+Shows the main dashboard after a user successfully logs in. It displays the task statistics, including Total Tasks, Pending, Completed, Overdue, and Due Soon. It also contains the Upcoming Tasks section, Quick Links, and the Easter Egg feature for easy navigation and quick access to important task information.
+
+- `Total Tasks` – Displays the total number of tasks belonging to the logged-in user.
+- `Pending` – Shows the number of tasks that have not yet been completed.
+- `Completed` – Displays the number of tasks marked as completed.
+- `Overdue` – Shows pending tasks whose due dates have already passed.
+- `Due Soon` – Displays pending tasks that are approaching their due dates within the system's defined period.
+- `Upcoming Tasks` – Displays tasks that still require attention, helping users keep track of their schedules.
 
 ### My Tasks
 
 ![My Tasks](screenshots/my_tasks.png)
 
-Shows the task table containing the saved tasks.
+Shows the task management table containing the user's saved tasks. It displays information such as task title, category, priority, due date, status, and due state. The screen also provides actions for editing and deleting tasks.
 
 ### Add Task
 
 ![Add Task](screenshots/add_task.png)
 
-Shows the dialog used to create a new task.
+Shows the form used to create a new task. Users can enter the task title, description, category, priority, and due date. This demonstrates how users add and save tasks to their personal task list.
 
 ### Edit Task
 
 ![Edit Task](screenshots/edit_task.png)
 
-Shows the dialog used to modify an existing task.
+Shows the task editing form with the information of an existing task. Users can modify the task details and save the changes, demonstrating the system's task update functionality.
 
 ### Search and Filter
 
 ![Search and Filter](screenshots/search_filter.png)
 
-Shows the search and filtering functionality.
+Shows the search bar and filter options used to find specific tasks. Users can search by task title, description, or category and filter tasks by category, priority, and status. The Clear button resets the search and filter fields to their default values.
 
-### Easter Egg
+### Easter Egg Feature
 
 ![Easter Egg](screenshots/easter_egg.png)
 
-Shows the interactive Easter Egg and Bible verse display.
+Shows the clickable Easter Egg feature on the dashboard and the Bible verse dialog that appears when it is opened. This feature displays a randomly selected Bible verse as an additional interactive element of TASKTIFY.
 
 ---
 
@@ -446,7 +571,11 @@ The following test cases cover the main functions implemented in TASKTIFY.
 
 | Test Area | Test Action | Expected Result | Status |
 |---|---|---|---|
-| Application | Run `main.py` | TASKTIFY opens successfully | Passed |
+| Application | Run `main.py` | Authentication screen opens successfully | Passed |
+| Registration | Register with valid account details | Account is created | Passed |
+| Login | Log in with valid credentials | The user's main window opens | Passed |
+| User Separation | Log in with a different account | The account displays its own task list | Passed |
+| Sign Out | Click Sign Out | The authentication screen appears again | Passed |
 | Database | Start the application | Database connects successfully | Passed |
 | Add Task | Add a valid task | Task is saved and displayed | Passed |
 | View Task | Open My Tasks | Saved tasks are displayed | Passed |
@@ -455,10 +584,12 @@ The following test cases cover the main functions implemented in TASKTIFY.
 | Validation | Enter invalid or incomplete information | Invalid input is rejected | Passed |
 | Search | Search for a task | Matching tasks are displayed | Passed |
 | Filter | Filter by category, priority, or status | Matching tasks are displayed | Passed |
+| Clear Filters | Apply filters and click Clear | Search and filters return to default settings | Passed |
 | Due State | Use different due dates | Correct due state is displayed | Passed |
-| Dashboard | View task statistics | Correct statistics are displayed | Passed |
+| Dashboard | View task statistics | Task statistics are displayed | Passed |
 | Easter Egg | Interact with the egg | A Bible verse is displayed | Passed |
 | Data Persistence | Restart the application | Saved tasks remain available | Passed |
+
 ---
 
 ## Known Issues and Limitations
@@ -470,14 +601,13 @@ TASKTIFY is designed as a local desktop task management system.
 The current system has the following limitations:
 
 - It uses a local SQLite database.
-- It does not include user accounts or login functionality.
 - It does not provide cloud synchronization.
-- It does not support multiple users.
-- Search and filtering are performed within the application's task data.
+- Task data is not synchronized between devices.
 - The Bible verses used by the Easter Egg are predefined.
 - The system does not include notifications or reminders.
 - The system does not include task export functionality.
 - The system does not include automatic database backup.
+- Password storage uses SHA-256 hashing; a dedicated password-hashing method with a salt would provide stronger password-storage protection.
 
 These limitations can be addressed in future versions of the project.
 
@@ -485,16 +615,18 @@ These limitations can be addressed in future versions of the project.
 
 ## Future Improvements
 
+---
+
 Possible improvements for future versions include:
 
-- User login and account management
-- Cloud database support
-- Task notifications and reminders
-- Task export
-- Database backup and restore
-- More customization options
-- Additional motivational features
-- More Bible verses for the Easter Egg
+• Cloud database support and synchronization
+• Task notifications and reminders
+• Task export
+• Database backup and restore
+• More customization options
+• Additional motivational features
+• More Bible verses for the Easter Egg
+• Stronger password storage using a dedicated password-hashing method
 
 ---
 

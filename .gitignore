@@ -2,3 +2,9 @@
 __pycache__/
 *.pyc
 .idea/
+
+# Ignore internal helper scripts
+view_db.py
+
+# Ignore local database files
+*.db

@@ -25,13 +25,17 @@ from features.tasks.service import TaskService
 from features.tasks.view import TaskDialog
 from styles import APP_STYLE
 
+# Exit code signal to request sign out in main loop
+SIGNOUT_EXIT_CODE = 888
+
 
 class MainWindow(QMainWindow):
     """Main application window combining feature modules."""
 
-    def __init__(self, db):
+    def __init__(self, db, current_user):
         super().__init__()
 
+        self.current_user = current_user
         self.task_service = TaskService(TaskRepository(db))
         self.verse_service = VerseService()
 
@@ -94,23 +98,62 @@ class MainWindow(QMainWindow):
         tagline.setObjectName("tagline")
         layout.addWidget(tagline)
 
-        layout.addSpacing(25)
+        layout.addSpacing(15)
+
+        # Active User Info
+        user_lbl = QLabel(f"👤 {self.current_user['username']}")
+        user_lbl.setStyleSheet("color: #ffd86e; font-weight: bold; font-size: 11px;")
+        layout.addWidget(user_lbl)
+
+        layout.addSpacing(15)
 
         self.dashboard_button = self.create_nav_button("⌂   Dashboard")
         self.tasks_button = self.create_nav_button("☷   My Tasks")
-        self.add_button = self.create_nav_button("＋   Add Task")
 
         self.dashboard_button.clicked.connect(lambda: self.show_page("dashboard"))
         self.tasks_button.clicked.connect(lambda: self.show_page("tasks"))
-        self.add_button.clicked.connect(self.open_add_dialog)
 
         layout.addWidget(self.dashboard_button)
         layout.addWidget(self.tasks_button)
+
+        layout.addSpacing(15)
+
+        # QUICK LINKS Header
+        quick_links_hdr = QLabel("QUICK LINKS")
+        quick_links_hdr.setStyleSheet("color: #63799e; font-size: 10px; font-weight: bold; letter-spacing: 1px;")
+        layout.addWidget(quick_links_hdr)
+
+        self.add_button = self.create_nav_button("＋   Add Task")
+        self.add_button.clicked.connect(self.open_add_dialog)
         layout.addWidget(self.add_button)
 
+        # Pushes Sign Out and footer down to the very bottom
         layout.addStretch()
 
+        # Sign Out Button at the bottom
+        signout_btn = self.create_nav_button("              Sign Out")
+        signout_btn.clicked.connect(self.handle_signout)
+        layout.addWidget(signout_btn)
+
+        layout.addSpacing(10)
+
+        footer = QLabel("TASKTIFY\nTask Management System")
+        footer.setStyleSheet("color: #63799e; font-size: 9px;")
+        layout.addWidget(footer)
+
         root.addWidget(sidebar)
+
+    def handle_signout(self):
+        reply = QMessageBox.question(
+            self,
+            "Sign Out",
+            "Are you sure you want to sign out?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+        )
+        if reply == QMessageBox.StandardButton.Yes:
+            from PyQt6.QtWidgets import QApplication
+            self.close()  # Completely close and hide dashboard window
+            QApplication.exit(SIGNOUT_EXIT_CODE)
 
     @staticmethod
     def create_nav_button(text):
@@ -172,7 +215,7 @@ class MainWindow(QMainWindow):
         upcoming_layout.setContentsMargins(18, 16, 18, 16)
 
         top = QHBoxLayout()
-        title = QLabel("Upcoming Tasks")
+        title = QLabel(" Upcoming Tasks")
         title.setStyleSheet("font-size: 16px; font-weight: 800;")
         top.addWidget(title)
         top.addStretch()
@@ -281,9 +324,16 @@ class MainWindow(QMainWindow):
         self.priority_filter.currentIndexChanged.connect(self.refresh_task_table)
         self.status_filter.currentIndexChanged.connect(self.refresh_task_table)
 
+        # Clear Filters Button
+        self.clear_filter_btn = QPushButton("Clear")
+        self.clear_filter_btn.setObjectName("secondary")
+        self.clear_filter_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.clear_filter_btn.clicked.connect(self.reset_filters)
+
         controls.addWidget(self.category_filter)
         controls.addWidget(self.priority_filter)
         controls.addWidget(self.status_filter)
+        controls.addWidget(self.clear_filter_btn)
 
         layout.addLayout(controls)
 
@@ -296,13 +346,186 @@ class MainWindow(QMainWindow):
         self.task_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.task_table.verticalHeader().setVisible(False)
         self.task_table.horizontalHeader().setStretchLastSection(True)
-        self.task_table.verticalHeader().setDefaultSectionSize(40)
 
-        widths = [0, 210, 100, 95, 110, 95, 95, 150]
+        widths = [0, 210, 100, 100, 110, 100, 110, 180]
         for index, width in enumerate(widths):
             self.task_table.setColumnWidth(index, width)
 
         layout.addWidget(self.task_table, 1)
+
+    def reset_filters(self):
+        """Resets search input and filter dropdowns back to default states."""
+        self.search_edit.clear()
+        self.category_filter.setCurrentIndex(0)
+        self.priority_filter.setCurrentIndex(0)
+        self.status_filter.setCurrentIndex(0)
+        self.refresh_task_table()
+
+    def get_greeting(self):
+        hour = datetime.now().hour
+        if hour < 12:
+            return "Good morning! ☀️"
+        elif hour < 18:
+            return "Good afternoon! ☀️"
+        else:
+            return "Good evening! 🌙"
+
+    def refresh_dashboard(self):
+        self.greeting.setText(self.get_greeting())
+        stats = self.task_service.get_statistics(self.current_user["id"])
+
+        self.stat_total.number_label.setText(str(stats["total"]))
+        self.stat_pending.number_label.setText(str(stats["pending"]))
+        self.stat_completed.number_label.setText(str(stats["completed"]))
+        self.stat_overdue.number_label.setText(str(stats["overdue"]))
+        self.stat_due_soon.number_label.setText(str(stats["due_soon"]))
+
+        tasks = [t for t in self.task_service.get_all_tasks(self.current_user["id"]) if t.status != "Completed"]
+        self.upcoming_table.setRowCount(0)
+
+        for row_idx, task in enumerate(tasks):
+            self.upcoming_table.insertRow(row_idx)
+            self.upcoming_table.setItem(row_idx, 0, QTableWidgetItem(task.title))
+            self.upcoming_table.setItem(row_idx, 1, QTableWidgetItem(task.category))
+
+            due = datetime.strptime(task.due_date, "%Y-%m-%d").strftime("%b %d, %Y")
+            self.upcoming_table.setItem(row_idx, 2, QTableWidgetItem(due))
+
+            state = self.task_service.get_due_state(task)
+            state_item = QTableWidgetItem(state)
+            state_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            if state == "Overdue":
+                state_item.setBackground(QColor("#a83246"))
+            elif state == "Due Soon":
+                state_item.setBackground(QColor("#c78b32"))
+            else:
+                state_item.setBackground(QColor("#2a6eb0"))
+
+            self.upcoming_table.setItem(row_idx, 3, state_item)
+
+    def refresh_task_table(self):
+        search = self.search_edit.text().lower()
+        cat = self.category_filter.currentText()
+        prio = self.priority_filter.currentText()
+        stat = self.status_filter.currentText()
+
+        all_tasks = self.task_service.get_all_tasks(self.current_user["id"])
+        filtered = []
+
+        for t in all_tasks:
+            match_search = (search in t.title.lower()) or (search in t.description.lower()) or (search in t.category.lower())
+            match_cat = (cat == "All Categories") or (t.category == cat)
+            match_prio = (prio == "All Priorities") or (t.priority == prio)
+            match_stat = (stat == "All Statuses") or (t.status == stat)
+
+            if match_search and match_cat and match_prio and match_stat:
+                filtered.append(t)
+
+        self.task_table.setRowCount(0)
+        for row_idx, task in enumerate(filtered):
+            self.task_table.insertRow(row_idx)
+
+            # Column 0: ID
+            self.task_table.setItem(row_idx, 0, QTableWidgetItem(str(task.id)))
+
+            # Column 1: Title
+            self.task_table.setItem(row_idx, 1, QTableWidgetItem(task.title))
+
+            # Column 2: Category
+            self.task_table.setItem(row_idx, 2, QTableWidgetItem(task.category))
+
+            # Column 3: Priority Badge Color
+            prio_item = QTableWidgetItem(task.priority)
+            prio_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            if task.priority == "High":
+                prio_item.setBackground(QColor("#a83246"))
+            elif task.priority == "Medium":
+                prio_item.setBackground(QColor("#c78b32"))
+            elif task.priority == "Low":
+                prio_item.setBackground(QColor("#2b7a4b"))
+            self.task_table.setItem(row_idx, 3, prio_item)
+
+            # Column 4: Due Date
+            due = datetime.strptime(task.due_date, "%Y-%m-%d").strftime("%b %d, %Y")
+            self.task_table.setItem(row_idx, 4, QTableWidgetItem(due))
+
+            # Column 5: Status Badge Color
+            stat_item = QTableWidgetItem(task.status)
+            stat_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            if task.status == "Completed":
+                stat_item.setBackground(QColor("#2b7a4b"))
+            else:
+                stat_item.setBackground(QColor("#3d5a80"))
+            self.task_table.setItem(row_idx, 5, stat_item)
+
+            # Column 6: Due State Badge Color
+            state = self.task_service.get_due_state(task)
+            state_item = QTableWidgetItem(state)
+            state_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            if state == "Overdue":
+                state_item.setBackground(QColor("#a83246"))
+            elif state == "Due Soon":
+                state_item.setBackground(QColor("#c78b32"))
+            elif state == "Completed":
+                state_item.setBackground(QColor("#2b7a4b"))
+            else:
+                state_item.setBackground(QColor("#2a6eb0"))
+            self.task_table.setItem(row_idx, 6, state_item)
+
+            # Column 7: Actions Buttons
+            btn_box = QWidget()
+            btn_layout = QHBoxLayout(btn_box)
+            btn_layout.setContentsMargins(4, 2, 4, 2)
+            btn_layout.setSpacing(6)
+
+            edit_btn = QPushButton("Edit")
+            edit_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            edit_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #213555;
+                    color: #ffffff;
+                    border: 1px solid #3e5481;
+                    border-radius: 4px;
+                    font-size: 11px;
+                    font-weight: bold;
+                    min-width: 55px;
+                    max-height: 26px;
+                }
+                QPushButton:hover {
+                    background-color: #2c4770;
+                }
+            """)
+            edit_btn.clicked.connect(lambda checked=False, tid=task.id: self.open_edit_dialog(tid))
+
+            del_btn = QPushButton("Delete")
+            del_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            del_btn.setStyleSheet("""
+                QPushButton {
+                    background-color: #a83246;
+                    color: #ffffff;
+                    border: none;
+                    border-radius: 4px;
+                    font-size: 11px;
+                    font-weight: bold;
+                    min-width: 55px;
+                    max-height: 26px;
+                }
+                QPushButton:hover {
+                    background-color: #be3950;
+                }
+            """)
+            del_btn.clicked.connect(lambda checked=False, tid=task.id: self.confirm_delete(tid))
+
+            btn_layout.addWidget(edit_btn)
+            btn_layout.addWidget(del_btn)
+
+            self.task_table.setRowHeight(row_idx, 44)
+            self.task_table.setCellWidget(row_idx, 7, btn_box)
+
+    def refresh_all(self):
+        self.refresh_dashboard()
+        self.refresh_task_table()
 
     def show_page(self, page):
         self.current_page = page
@@ -325,7 +548,11 @@ class MainWindow(QMainWindow):
         dialog = TaskDialog(self)
         if dialog.exec():
             try:
-                self.task_service.create_task(**dialog.get_data())
+                data = dialog.get_data()
+                self.task_service.create_task(
+                    user_id=self.current_user["id"],
+                    **data
+                )
                 self.refresh_all()
                 self.show_page("tasks")
             except ValueError as error:
@@ -334,224 +561,39 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Database Error", f"Could not add the task.\n\n{error}")
 
     def open_edit_dialog(self, task_id):
-        task = self.task_service.get_task(task_id)
+        task = self.task_service.get_task(task_id, self.current_user["id"])
         if task is None:
             QMessageBox.warning(self, "Task Not Found", "The selected task no longer exists.")
             return
 
-        dialog = TaskDialog(self, task)
+        dialog = TaskDialog(self, task=task)
         if dialog.exec():
             try:
-                self.task_service.update_task(task_id, **dialog.get_data())
+                data = dialog.get_data()
+                self.task_service.update_task(
+                    task_id=task_id,
+                    user_id=self.current_user["id"],
+                    **data
+                )
                 self.refresh_all()
             except ValueError as error:
                 QMessageBox.warning(self, "Invalid Task", str(error))
             except Exception as error:
-                QMessageBox.critical(self, "Database Error", f"Could not update the task.\n\n{error}")
+                QMessageBox.critical(self, "Database Error", f"Could not update task.\n\n{error}")
 
     def confirm_delete(self, task_id):
-        task = self.task_service.get_task(task_id)
-        if task is None:
-            return
-
-        answer = QMessageBox.question(
+        reply = QMessageBox.question(
             self,
             "Delete Task",
-            f'Are you sure you want to delete\n"{task.title}"?',
+            "Are you sure you want to delete this task?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.No,
         )
-
-        if answer == QMessageBox.StandardButton.Yes:
-            try:
-                self.task_service.delete_task(task_id)
-                self.refresh_all()
-            except Exception as error:
-                QMessageBox.critical(self, "Database Error", f"Could not delete the task.\n\n{error}")
-
-    def refresh_task_table(self):
-        if not hasattr(self, "task_table"):
-            return
-
-        tasks = self.task_service.get_all_tasks()
-        search = self.search_edit.text().strip().lower()
-        selected_category = self.category_filter.currentText()
-        selected_priority = self.priority_filter.currentText()
-        selected_status = self.status_filter.currentText()
-
-        filtered_tasks = []
-        for task in tasks:
-            searchable = f"{task.title} {task.description} {task.category}".lower()
-
-            if search and search not in searchable:
-                continue
-            if selected_category != "All Categories" and task.category != selected_category:
-                continue
-            if selected_priority != "All Priorities" and task.priority != selected_priority:
-                continue
-            if selected_status != "All Statuses" and task.status != selected_status:
-                continue
-
-            filtered_tasks.append(task)
-
-        self.task_table.setRowCount(0)
-
-        for task in filtered_tasks:
-            row = self.task_table.rowCount()
-            self.task_table.insertRow(row)
-
-            self.set_center_item(row, 0, str(task.id))
-            self.set_left_item(row, 1, task.title)
-            self.set_center_item(row, 2, task.category)
-            self.set_center_item(row, 3, task.priority)
-            self.set_center_item(row, 4, self.format_date(task.due_date))
-            self.set_center_item(row, 5, task.status)
-
-            due_state = self.task_service.get_due_state(task)
-            self.set_center_item(row, 6, due_state)
-
-            self.add_action_buttons(row, task.id)
-
-            self.apply_badge(self.task_table.item(row, 3), task.priority)
-            self.apply_badge(self.task_table.item(row, 5), task.status)
-            self.apply_badge(self.task_table.item(row, 6), due_state)
-
-    def set_center_item(self, row, column, text):
-        item = QTableWidgetItem(text)
-        item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.task_table.setItem(row, column, item)
-
-    def set_left_item(self, row, column, text):
-        item = QTableWidgetItem(text)
-        item.setTextAlignment(Qt.AlignmentFlag.AlignVCenter)
-        self.task_table.setItem(row, column, item)
-
-    def add_action_buttons(self, row, task_id):
-        widget = QWidget()
-        layout = QHBoxLayout(widget)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
-        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        edit = QPushButton("Edit")
-        edit.setToolTip("Edit Task")
-        edit.setFixedSize(58, 26)
-        edit.setCursor(Qt.CursorShape.PointingHandCursor)
-        edit.setStyleSheet("""
-            QPushButton {
-                background-color: #1d3760;
-                color: #ffffff;
-                border: 1px solid #3d5986;
-                border-radius: 4px;
-                font-size: 11px;
-                font-weight: 600;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: #294977;
-            }
-        """)
-        edit.clicked.connect(lambda checked=False, tid=task_id: self.open_edit_dialog(tid))
-
-        delete = QPushButton("Delete")
-        delete.setToolTip("Delete Task")
-        delete.setFixedSize(58, 26)
-        delete.setCursor(Qt.CursorShape.PointingHandCursor)
-        delete.setStyleSheet("""
-            QPushButton {
-                background-color: #8e3452;
-                color: #ffffff;
-                border: 1px solid #a83d5d;
-                border-radius: 4px;
-                font-size: 11px;
-                font-weight: 600;
-                padding: 0px;
-            }
-            QPushButton:hover {
-                background-color: #a83d5d;
-            }
-        """)
-        delete.clicked.connect(lambda checked=False, tid=task_id: self.confirm_delete(tid))
-
-        layout.addWidget(edit)
-        layout.addWidget(delete)
-        self.task_table.setCellWidget(row, 7, widget)
-
-    @staticmethod
-    def apply_badge(item, value):
-        if item is None:
-            return
-
-        colors = {
-            "High": "#8e3452",
-            "Medium": "#9a6c29",
-            "Low": "#287c69",
-            "Overdue": "#8e3452",
-            "Due Soon": "#9a6c29",
-            "Upcoming": "#2e6eb4",
-            "Completed": "#2c7d60",
-            "Pending": "#4b6290",
-        }
-
-        if value in colors:
-            item.setBackground(QColor(colors[value]))
-            item.setForeground(QColor("#ffffff"))
-
-    def refresh_dashboard(self):
-        self.greeting.setText(self.get_greeting())
-        statistics = self.task_service.get_statistics()
-
-        self.stat_total.number_label.setText(str(statistics["total"]))
-        self.stat_pending.number_label.setText(str(statistics["pending"]))
-        self.stat_completed.number_label.setText(str(statistics["completed"]))
-        self.stat_overdue.number_label.setText(str(statistics["overdue"]))
-        self.stat_due_soon.number_label.setText(str(statistics["due_soon"]))
-
-        tasks = [
-            task for task in self.task_service.get_all_tasks() if task.status != "Completed"
-        ]
-
-        self.upcoming_table.setRowCount(0)
-
-        for task in tasks:
-            row = self.upcoming_table.rowCount()
-            self.upcoming_table.insertRow(row)
-
-            self.upcoming_table.setItem(row, 0, QTableWidgetItem(task.title))
-            self.upcoming_table.setItem(row, 1, QTableWidgetItem(task.category))
-            self.upcoming_table.setItem(row, 2, QTableWidgetItem(self.format_date(task.due_date)))
-
-            state = self.task_service.get_due_state(task)
-            state_item = QTableWidgetItem(state)
-            state_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.apply_badge(state_item, state)
-
-            self.upcoming_table.setItem(row, 3, state_item)
-
-    @staticmethod
-    def get_greeting():
-        hour = datetime.now().hour
-        if 5 <=hour < 12:
-            return "Good morning! ☀️"
-        if 12 <= hour < 18:
-            return "Good afternoon! 🌤️"
-        return "Good evening! 🌙"
-
-
-    @staticmethod
-    def format_date(date_string):
-        try:
-            date_value = datetime.strptime(date_string, "%Y-%m-%d")
-            return date_value.strftime("%b %d, %Y")
-        except ValueError:
-            return date_string
-
-    def refresh_all(self):
-        self.refresh_dashboard()
-        self.refresh_task_table()
+        if reply == QMessageBox.StandardButton.Yes:
+            self.task_service.delete_task(task_id, self.current_user["id"])
+            self.refresh_all()
 
     def show_verse(self):
-        self.verse_dialog = VerseDialog(self, self.verse_service)
-        self.verse_dialog.finished.connect(self.egg.reset)
-        self.verse_dialog.exec()
-        self.verse_dialog = None
+        if self.verse_dialog is None or not self.verse_dialog.isVisible():
+            self.verse_dialog = VerseDialog(self, self.verse_service)
+            self.verse_dialog.finished.connect(self.egg.reset)
+            self.verse_dialog.show()
