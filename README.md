@@ -619,14 +619,14 @@ These limitations can be addressed in future versions of the project.
 
 Possible improvements for future versions include:
 
-• Cloud database support and synchronization
-• Task notifications and reminders
-• Task export
-• Database backup and restore
-• More customization options
-• Additional motivational features
-• More Bible verses for the Easter Egg
-• Stronger password storage using a dedicated password-hashing method
+- Cloud database suport and synchronization
+- Task notifications and reminders
+- Task export
+- Database backup and restore
+- More customization options
+- Additional motivational features
+- More Bible verses for the Easter Egg
+- Stronger password storage using a dedicated password-hashing method
 
 ---
 
