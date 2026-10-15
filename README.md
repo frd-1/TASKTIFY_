@@ -154,8 +154,7 @@ TASKTIFY_/
 ├── main.py                         # Entry point; initializes authentication and the application
 ├── main_window.py                  # Main window, dashboard, task management, and feature integration
 ├── styles.py                       # Custom PyQt6 styles for the TASKTIFY interface
-├── tasktify.db                     # Local SQLite database for user accounts and task records
-│
+│ 
 ├── database/
 │   └── database.py                 # SQLite connection and database table setup
 │
@@ -224,7 +223,7 @@ Before running TASKTIFY, make sure the following are installed:
 
 ```bash
 git clone https://github.com/frd-1/TASKTIFY_.git
-
+cd TASKTIFY_
 ```
 ### 2. Create a Virtual Environment (Optional)
 
@@ -619,7 +618,7 @@ These limitations can be addressed in future versions of the project.
 
 Possible improvements for future versions include:
 
-- Cloud database suport and synchronization
+- Cloud database support and synchronization
 - Task notifications and reminders
 - Task export
 - Database backup and restore
